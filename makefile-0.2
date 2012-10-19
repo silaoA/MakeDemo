@@ -1,0 +1,77 @@
+#makefile的细节：
+#1.每行命令后面不要带多余的空格
+#2.windows和linux下的shell命令、目录表示不同
+#3.CINCS = -I.\includes 中I和.之间不能有空格
+target = prj3.exe 
+CC = gcc 
+#注意 等于号相当于C语言中的宏定义
+RM = del  /f
+#注意 windows下将等于号后面的rm改为del
+
+#C源程序
+SRCDIR = .\sources
+#SRCDIR := .
+#从运行结果来看，这里最好不要在末尾加\，斜线留到addprefix
+CFILES = printA.c printB.c main.c
+CSRCS = $(addprefix $(SRCDIR)\,$(CFILES))
+#貌似是括号左右不能留空格
+#CSRCS := $(SRCDIR)\$(wildcard *.c)
+
+#C目标文件
+OBJDIR = .\objs
+OBJFILES = $(CFILES:%.c=%.o)
+#COBJS = $(CSRCS:%.c=%.o)
+COBJS = $(addprefix $(OBJDIR)\,$(OBJFILES))
+#头文件目录
+CINCS = -I.\includes 
+#如有其他头文件目录可以直接后面添加目录的名 注意前面加-I
+#编译选项
+CFLAGS = $(CINCS) -g -Wall
+
+#all : version $(target)
+all : $(target)
+
+version :
+	@echo Show Gcc Version
+	$(CC) --version
+
+$(target) : $(COBJS)
+	@echo 连接目标文件，生成最终target -- $@
+	$(CC)  $(COBJS) -o $@   
+#此处之前少写了最终目标文件   $(CFLAGS)
+#	ld $^ -o $@
+
+#$(COBJS) :$(CSRCS)
+$(COBJS)  : $(addprefix $(SRCDIR)\,$(patsubst %.o,%.c,$(@F)))
+#$(COBJS)  : $(addprefix $(SRCDIR)\,$(*F).c)
+#%.o : %.c
+#	@echo 正在编译c文件： $< --> $@
+#	@echo @F是$(@F)，替换后是$(addprefix $(SRCDIR)\,$(patsubst %.o,%.c,$(@F)))
+	@echo 正在编译c文件： $(addprefix $(SRCDIR)\,$(patsubst %.o,%.c,$(@F))) --> $@
+	$(CC) -c $(CFLAGS) $(addprefix $(SRCDIR)\,$(patsubst %.o,%.c,$(@F))) -o $@
+#	$(CC) -c $(CFLAGS) $(addprefix $(SRCDIR)\,$(patsubst %.o,%.c,$(@F)))
+#	$(CC) -c $(CFLAGS) $< -o $@
+	@echo -------------------------\n
+#此处之前少写了最终目标文件
+
+.PHONY:msg clean
+msg:
+	@echo SRCDIR是$(SRCDIR)
+	@echo CFILES是$(CFILES)
+	@echo OBJFILES是$(OBJFILES)
+	@echo CSRCS是$(CSRCS)
+	@echo COBJS是$(COBJS)
+	@echo CINCS是$(CINCS)
+	@echo CFLAGS是$(CFLAGS)
+	@echo RM命令是$(RM)
+	@echo CC命令是$(CC)
+	
+clean:cleanobj cleanexe
+	@echo obj文件和exe文件已删除
+
+cleanobj:
+	@echo 删除所有.o文件
+	$(RM) $(COBJS)
+cleanexe:
+	@echo 删除所有.exe文件
+	$(RM) $(target)
