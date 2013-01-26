@@ -11,8 +11,8 @@ int main(int argc,char* argv[])
 	printa();
 	printb();
 	
-	printf("人为添加一句,测试makefile\n");
-//	printf("人为添加第二句,测试makefile\n");
+//	printf("人为添加一句,测试makefile\n");
+	printf("人为添加第二句,测试makefile\n");
 	while( (ans != 'n') && (ans != 'N'))
 	{
 	    printf("Continue?A/B/N:");

@@ -2,6 +2,7 @@
 #1.每行命令后面不要带多余的空格
 #2.windows和linux下的shell命令、目录表示不同
 #3.CINCS = -I.\includes 中I和.之间不能有空格
+#4. windows下使用mingw32-make
 
 #几个特殊变量的含义
  #$@  用在生成规则中，表示当前目标 
@@ -42,8 +43,9 @@ endif
 #CSRCS = $(APP_CSRCS)
 #貌似是括号左右不能留空格
 
-#目标文件定义
+#目标文件定义，把路径添加进来
 COBJS := $(addprefix $(OBJS_DIR)\, $(patsubst %.c,%.o,$(notdir $(CSRCS))))
+#COBJS := $(addprefix $(OBJS_DIR)\, $(patsubst %.c,%.o,$(APP_CSRCS)))
 
 #编译器命令相关
 CC = gcc 
@@ -62,7 +64,7 @@ CFLAGS += -I$(INC_DIR)
 all : $(TARGET)
 
 version :
-	@echo Show GCC Version
+	@echo Show CC Version
 	$(CC) --version
 
 $(TARGET) : $(COBJS)
@@ -70,7 +72,16 @@ $(TARGET) : $(COBJS)
 	$(CC)  $(COBJS) -o $@ 
 	
 # 编译C程序，此规则的写法很重要！！！
+##################################  以下由c到o的几行 ##############################
+#第1行直接在目录后紧跟%，不添加任何'\'，经试验正确；$(OBJS_DIR)\%.o : $(SRC_DIR)\%.c的写法
+#由于\%的转义起作用作用(本意是在win下的目录分隔符)；但是$(OBJS_DIR)\\%.o : $(SRC_DIR)\%.c正确
+#第2行同时都加两个\\，却导致 .\sources\\printA.c --> .\objs\printA.o(不理解)；
+#第3行本意是把目标文件和源文件都直接列出来，规则错误，make不工作；
+#第4、5行错误同第3行，make也不工作
 $(OBJS_DIR)%.o : $(SRC_DIR)%.c
+#$(OBJS_DIR)\\%.o : $(SRC_DIR)\\%.c
+#$(COBJS)%.o:$(CSRCS)%.c
+#$(COBJS)\\%.o:$(CSRCS)\%.c
 	@echo 正在编译c文件： $< --> $@
 	$(CC) -c $(CFLAGS) $< -o $@
 
@@ -80,6 +91,7 @@ msg:
 	@echo COBJS是$(COBJS)
 	@echo CFLAGS是$(CFLAGS)
 	@echo RM命令是$(RM)
+	@echo $(notdir $(CSRCS))
 	
 clean:cleanobj cleanexe
 	@echo obj文件和exe文件已删除
@@ -89,4 +101,4 @@ cleanobj:
 	$(RM) $(COBJS)
 cleanexe:
 	@echo 删除所有.exe文件
-	$(RM) $(target)
+	$(RM) $(TARGET)
